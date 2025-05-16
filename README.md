@@ -2,8 +2,6 @@
 
 A simple, responsive web application that converts paper thickness in microns to paper volume based on grammage (GSM).
 
-![Micron to Volume Converter Screenshot](screenshot.jpg)
-
 ## Overview
 
 This web application helps publishers, printers, and paper industry professionals quickly calculate paper volume from thickness measurements. The tool uses the standard formula:
