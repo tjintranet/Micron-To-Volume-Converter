@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micron to Volume Converter</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+    <style>
+        /* Remove spinner arrows from number input */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        
+        .result-box {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        .hover-btn:hover {
+            transform: translateY(-1px);
+            transition: transform 0.2s;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">Micron to Volume Converter</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="volumeCalculator" class="needs-validation" novalidate>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="micronValue" class="form-label">Paper Thickness (Microns)</label>
+                                    <input type="number" class="form-control" id="micronValue" required min="1">
+                                    <div class="invalid-feedback">
+                                        Please enter a valid thickness.
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="grammageValue" class="form-label">Paper Grammage (GSM)</label>
+                                    <input type="number" class="form-control" id="grammageValue" required min="1">
+                                    <div class="invalid-feedback">
+                                        Please enter a valid grammage.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex mb-3">
+                                <button type="button" class="btn btn-secondary hover-btn px-4 me-4" onclick="clearCalculator()">
+                                    <span class="d-none d-md-inline">Clear Fields</span>
+                                    <span class="d-inline d-md-none">Clear</span>
+                                </button>
+                                <button type="button" class="btn btn-info hover-btn px-4" id="copyResultBtn" onclick="copyResultToClipboard()" disabled>
+                                    <span class="d-none d-md-inline">Copy to Clipboard</span>
+                                    <span class="d-inline d-md-none">Copy</span>
+                                </button>
+                            </div>
+                            
+                            <div class="result-box d-none" id="resultBox">
+                                <h5>Calculation Results:</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-2">Paper Thickness: <span id="paperThickness">-</span> microns</p>
+                                        <p class="mb-2">Paper Grammage: <span id="paperGrammage">-</span> gsm</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-0"><strong>Paper Volume: <span id="volumeResult">-</span></strong></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize event listeners when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners to form inputs for dynamic calculation
+            document.getElementById('micronValue').addEventListener('input', calculateVolumeAuto);
+            document.getElementById('grammageValue').addEventListener('input', calculateVolumeAuto);
+            
+            // Form validation
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        });
+
+        // Auto-calculate volume when form values change
+        function calculateVolumeAuto() {
+            // Get input values
+            const micron = parseFloat(document.getElementById('micronValue').value);
+            const grammage = parseFloat(document.getElementById('grammageValue').value);
+
+            // Validate inputs - if any required field is missing, don't update
+            if (isNaN(micron) || isNaN(grammage) || micron <= 0 || grammage <= 0) {
+                // Hide result box if we don't have all needed values
+                document.getElementById('resultBox').classList.add('d-none');
+                document.getElementById('copyResultBtn').disabled = true;
+                return;
+            }
+
+            // Proceed with calculation
+            calculateVolume();
+        }
+
+        // Calculate paper volume
+        function calculateVolume() {
+            // Get input values
+            const micron = parseFloat(document.getElementById('micronValue').value);
+            const grammage = parseFloat(document.getElementById('grammageValue').value);
+            
+            // Calculate volume using the formula: Microns/Grammage * 10
+            const volume = (micron / grammage) * 10;
+            
+            // Show results with rounded values
+            document.getElementById('resultBox').classList.remove('d-none');
+            document.getElementById('paperThickness').textContent = micron.toFixed(1);
+            document.getElementById('paperGrammage').textContent = grammage.toFixed(1);
+            document.getElementById('volumeResult').textContent = volume.toFixed(1);
+            
+            // Enable the copy to clipboard button
+            document.getElementById('copyResultBtn').disabled = false;
+        }
+
+        // Copy result to clipboard
+        function copyResultToClipboard() {
+            // Get input and result values
+            const micron = document.getElementById('micronValue').value;
+            const grammage = document.getElementById('grammageValue').value;
+            const volume = document.getElementById('volumeResult').textContent;
+            
+            // Create text for clipboard
+            const clipboardText = 
+`Micron to Volume Calculation
+---------------------------
+Paper Thickness: ${micron} microns
+Paper Grammage: ${grammage} gsm
+Paper Volume: ${volume}`;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(clipboardText)
+                .then(() => {
+                    // Add a temporary success indicator
+                    const btn = document.getElementById('copyResultBtn');
+                    
+                    // Save original button content
+                    const originalButton = btn.innerHTML;
+                    
+                    // Replace with temporary success message while preserving responsiveness
+                    btn.innerHTML = '<span class="d-none d-md-inline">Copied!</span><span class="d-inline d-md-none">Copied!</span>';
+                    btn.classList.remove('btn-info');
+                    btn.classList.add('btn-success');
+                    
+                    setTimeout(() => {
+                        // Restore original button content with spans
+                        btn.innerHTML = originalButton;
+                        btn.classList.remove('btn-success');
+                        btn.classList.add('btn-info');
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    alert('Failed to copy to clipboard. Please try again.');
+                });
+        }
+
+        // Clear calculator function
+        function clearCalculator() {
+            // Reset input fields
+            document.getElementById('micronValue').value = '';
+            document.getElementById('grammageValue').value = '';
+            
+            // Hide results
+            document.getElementById('resultBox').classList.add('d-none');
+            
+            // Disable copy to clipboard button
+            document.getElementById('copyResultBtn').disabled = true;
+            
+            // Reset validation
+            const form = document.getElementById('volumeCalculator');
+            form.classList.remove('was-validated');
+        }
+
+        // Form validation for negative numbers
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value < 0) this.value = 0;
+            });
+        });
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
